@@ -120,6 +120,11 @@ public class HttpResponseStatus implements Comparable<HttpResponseStatus> {
     public static final HttpResponseStatus TEMPORARY_REDIRECT = newStatus(307, "Temporary Redirect");
 
     /**
+     * 308 Permanent Redirect (RFC7538)
+     */
+    public static final HttpResponseStatus PERMANENT_REDIRECT = newStatus(308, "Permanent Redirect");
+
+    /**
      * 400 Bad Request
      */
     public static final HttpResponseStatus BAD_REQUEST = newStatus(400, "Bad Request");
@@ -359,6 +364,8 @@ public class HttpResponseStatus implements Comparable<HttpResponseStatus> {
             return USE_PROXY;
         case 307:
             return TEMPORARY_REDIRECT;
+        case 308:
+            return PERMANENT_REDIRECT;
         case 400:
             return BAD_REQUEST;
         case 401:
@@ -473,10 +480,10 @@ public class HttpResponseStatus implements Comparable<HttpResponseStatus> {
         private final AsciiString string;
         private int i;
         /**
-         * 0 = New or havn't seen {@link ASCII_SPACE}.
-         * 1 = Last byte was {@link ASCII_SPACE}.
-         * 2 = Terminal State. Processed the byte after {@link ASCII_SPACE}, and parsed the status line.
-         * 3 = Terminal State. There was no byte after {@link ASCII_SPACE} but status has been parsed with what we saw.
+         * 0 = New or havn't seen {@link #ASCII_SPACE}.
+         * 1 = Last byte was {@link #ASCII_SPACE}.
+         * 2 = Terminal State. Processed the byte after {@link #ASCII_SPACE}, and parsed the status line.
+         * 3 = Terminal State. There was no byte after {@link #ASCII_SPACE} but status has been parsed with what we saw.
          */
         private int state;
         private HttpResponseStatus status;

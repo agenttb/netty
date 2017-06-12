@@ -25,8 +25,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class ResourceLeakDetectorTest {
 
-    @Test(timeout = 30000)
-    public void testConcurentUsage() throws Throwable {
+    @Test(timeout = 60000)
+    public void testConcurrentUsage() throws Throwable {
         final AtomicBoolean finished = new AtomicBoolean();
         final AtomicReference<Throwable> error = new AtomicReference<Throwable>();
         // With 50 threads issue #6087 is reproducible on every run.

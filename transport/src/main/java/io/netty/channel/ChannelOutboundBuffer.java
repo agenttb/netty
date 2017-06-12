@@ -24,7 +24,6 @@ import io.netty.util.Recycler.Handle;
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.FastThreadLocal;
 import io.netty.util.internal.InternalThreadLocalMap;
-import io.netty.util.internal.PlatformDependent;
 import io.netty.util.internal.PromiseNotificationUtil;
 import io.netty.util.internal.SystemPropertyUtil;
 import io.netty.util.internal.logging.InternalLogger;
@@ -86,33 +85,19 @@ public final class ChannelOutboundBuffer {
 
     private boolean inFail;
 
-    private static final AtomicLongFieldUpdater<ChannelOutboundBuffer> TOTAL_PENDING_SIZE_UPDATER;
+    private static final AtomicLongFieldUpdater<ChannelOutboundBuffer> TOTAL_PENDING_SIZE_UPDATER =
+            AtomicLongFieldUpdater.newUpdater(ChannelOutboundBuffer.class, "totalPendingSize");
 
     @SuppressWarnings("UnusedDeclaration")
     private volatile long totalPendingSize;
 
-    private static final AtomicIntegerFieldUpdater<ChannelOutboundBuffer> UNWRITABLE_UPDATER;
+    private static final AtomicIntegerFieldUpdater<ChannelOutboundBuffer> UNWRITABLE_UPDATER =
+            AtomicIntegerFieldUpdater.newUpdater(ChannelOutboundBuffer.class, "unwritable");
 
     @SuppressWarnings("UnusedDeclaration")
     private volatile int unwritable;
 
     private volatile Runnable fireChannelWritabilityChangedTask;
-
-    static {
-        AtomicIntegerFieldUpdater<ChannelOutboundBuffer> unwritableUpdater =
-                PlatformDependent.newAtomicIntegerFieldUpdater(ChannelOutboundBuffer.class, "unwritable");
-        if (unwritableUpdater == null) {
-            unwritableUpdater = AtomicIntegerFieldUpdater.newUpdater(ChannelOutboundBuffer.class, "unwritable");
-        }
-        UNWRITABLE_UPDATER = unwritableUpdater;
-
-        AtomicLongFieldUpdater<ChannelOutboundBuffer> pendingSizeUpdater =
-                PlatformDependent.newAtomicLongFieldUpdater(ChannelOutboundBuffer.class, "totalPendingSize");
-        if (pendingSizeUpdater == null) {
-            pendingSizeUpdater = AtomicLongFieldUpdater.newUpdater(ChannelOutboundBuffer.class, "totalPendingSize");
-        }
-        TOTAL_PENDING_SIZE_UPDATER = pendingSizeUpdater;
-    }
 
     ChannelOutboundBuffer(AbstractChannel channel) {
         this.channel = channel;
@@ -679,15 +664,15 @@ public final class ChannelOutboundBuffer {
     }
 
     private static void safeSuccess(ChannelPromise promise) {
-        if (!(promise instanceof VoidChannelPromise)) {
-            PromiseNotificationUtil.trySuccess(promise, null, logger);
-        }
+        // Only log if the given promise is not of type VoidChannelPromise as trySuccess(...) is expected to return
+        // false.
+        PromiseNotificationUtil.trySuccess(promise, null, promise instanceof VoidChannelPromise ? null : logger);
     }
 
     private static void safeFail(ChannelPromise promise, Throwable cause) {
-        if (!(promise instanceof VoidChannelPromise)) {
-            PromiseNotificationUtil.tryFailure(promise, cause, logger);
-        }
+        // Only log if the given promise is not of type VoidChannelPromise as tryFailure(...) is expected to return
+        // false.
+        PromiseNotificationUtil.tryFailure(promise, cause, promise instanceof VoidChannelPromise ? null : logger);
     }
 
     @Deprecated
@@ -769,7 +754,7 @@ public final class ChannelOutboundBuffer {
     static final class Entry {
         private static final Recycler<Entry> RECYCLER = new Recycler<Entry>() {
             @Override
-            protected Entry newObject(Handle handle) {
+            protected Entry newObject(Handle<Entry> handle) {
                 return new Entry(handle);
             }
         };

@@ -58,6 +58,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 
 @RunWith(Parameterized.class)
@@ -116,7 +117,7 @@ public class SslErrorTest {
         this.exception = exception;
     }
 
-    @Test(timeout = 10000L)
+    @Test(timeout = 30000)
     public void testCorrectAlert() throws Exception {
         // As this only works correctly at the moment when OpenSslEngine is used on the server-side there is
         // no need to run it if there is no openssl is available at all.
@@ -238,7 +239,7 @@ public class SslErrorTest {
     // at the moment as there are no different exceptions for the different alerts.
     private static void verifyException(Throwable cause, String messagePart, Promise<Void> promise) {
         String message = cause.getMessage();
-        if (message.contains(messagePart)) {
+        if (message.toLowerCase(Locale.UK).contains(messagePart.toLowerCase(Locale.UK))) {
             promise.setSuccess(null);
         } else {
             promise.setFailure(new AssertionError("message not contains '" + messagePart + "': " + message));

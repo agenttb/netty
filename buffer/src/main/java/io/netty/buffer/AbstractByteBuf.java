@@ -295,15 +295,15 @@ public abstract class AbstractByteBuf extends ByteBuf {
             return 0;
         }
 
+        final int maxCapacity = maxCapacity();
+        final int writerIndex = writerIndex();
         if (minWritableBytes > maxCapacity - writerIndex) {
-            if (force) {
-                if (capacity() == maxCapacity()) {
-                    return 1;
-                }
-
-                capacity(maxCapacity());
-                return 3;
+            if (!force || capacity() == maxCapacity) {
+                return 1;
             }
+
+            capacity(maxCapacity);
+            return 3;
         }
 
         // Normalize the current capacity to the power of 2.
@@ -1381,6 +1381,13 @@ public abstract class AbstractByteBuf extends ByteBuf {
             throw new IllegalArgumentException("minimumReadableBytes: " + minimumReadableBytes + " (expected: >= 0)");
         }
         checkReadableBytes0(minimumReadableBytes);
+    }
+
+    protected final void checkNewCapacity(int newCapacity) {
+        ensureAccessible();
+        if (newCapacity < 0 || newCapacity > maxCapacity()) {
+            throw new IllegalArgumentException("newCapacity: " + newCapacity + " (expected: 0-" + maxCapacity() + ')');
+        }
     }
 
     private void checkReadableBytes0(int minimumReadableBytes) {
